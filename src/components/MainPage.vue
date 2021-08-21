@@ -160,7 +160,7 @@ export default {
       }
 
       try {
-        const res = await axios.get(`http://localhost:3000/api/top-skills?ind=${this.industryAPIString}`)
+        const res = await axios.get(`api/top-skills?ind=${this.industryAPIString}`)
         const data = res.data;
         this.topSkills = data;
         this.industryHeadingString = "Top Skill Groups for " + this.selectedIndustryName + ":";
@@ -192,7 +192,7 @@ export default {
         }
       } this.countryAPIString = country;
       try {
-        const res = await axios.get(`http://localhost:3000/api/ind-growth?industry=${this.industryAPIString}&country=${this.countryAPIString}`)
+        const res = await axios.get(`api/ind-growth?industry=${this.industryAPIString}&country=${this.countryAPIString}`)
         const data = res.data;
         if (!data) {
           this.industryGrowth = null;
