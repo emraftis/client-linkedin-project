@@ -1,18 +1,22 @@
 <template>
+
   <div class="inputs">
-    <label for="countryName">Country:</label>
-    <select name="countryName" id="countryName" v-model="selectedCountryName" @change="getIndustryGrowth(selectedCountryName, selectedIndustryName)">
-      <option v-for="country in countryNames" :key="country" :value="country">{{ country }}</option>
-    </select>
-    <br>
-    <div v-if="selectedCountryName">
+    <div>
+      <p>Please enter an Industry and then a Country to see data from, "World Bank LinkedIn Digital Data for Development" by World Bank Group & LinkedIn Corporation</p>
+    </div>
+    <div>
       <label for="industryName">Industry:</label>
       <select name="industryName" id="industryName" v-model="selectedIndustryName" @change="getIndustrySkills(selectedIndustryName)">
         <option v-for="industry in industryNames" :key="industry" :value="industry">{{ industry }}</option>
       </select>
     </div>
     <br>
-    <button @click="getIndustrySkills(selectedIndustryName)">Search</button>
+    <div v-if="selectedIndustryName">
+      <label for="countryName">Country:</label>
+      <select name="countryName" id="countryName" v-model="selectedCountryName" @change="getIndustryGrowth(selectedCountryName, selectedIndustryName)">
+        <option v-for="country in countryNames" :key="country" :value="country">{{ country }}</option>
+      </select>
+    </div>
   </div>
 
   <div v-if="shouldDisplay" class="top-skills">
@@ -27,7 +31,7 @@
     </div>
   </div>
   
-  <div v-if="shouldDisplay" class="growth-rate">
+  <div v-if="selectedCountryName != '' && shouldDisplay" class="growth-rate">
     <h3>{{ growthHeadingString }}</h3>
     <div class="list-container">
       <p>The Growth from Industry Transitions metric looks at how LinkedIn members are moving across industries (based on net transition: in minus out). For example, if a net of 50 members joined a Biotech industry with 1,000 members in a particular country after leaving jobs in other industries, that Biotech industry would have grown by 5% due to transitions in that year. We calculate these rates across all industries on an annual basis, and report an average of the last three years. The metric above is built entirely on a sample of LinkedIn members that have a company registered on LinkedIn on their profile. Since white-collar workers in knowledge-intensive services sectors are more likely to be on LinkedIn, the growth rate above may not accurately represent sectors like manufacturing and mining that tend to have more blue-collar workers.</p>
@@ -42,22 +46,19 @@
         }'
       ></area-chart>
     </div>
-    <div v-if="industryGrowth" class="list-container">
-      <caption class="caption-text"><a href="https://documents1.worldbank.org/curated/en/827991542143093021/pdf/World-Bank-Group-LinkedIn-Data-Insights-Jobs-Skills-and-Migration-Trends-Methodology-and-Validation-Results.pdf">"World Bank LinkedIn Digital Data for Development" by World Bank Group & LinkedIn Corporation, licensed under CC BY 3.0.</a></caption>
-    </div>
     <div v-else>
       <h4>No Data Available</h4>
     </div>
   </div>
+  <footer class="footer-container">
+      <caption class="caption-text">All data is sourced from <a href="https://documents1.worldbank.org/curated/en/827991542143093021/pdf/World-Bank-Group-LinkedIn-Data-Insights-Jobs-Skills-and-Migration-Trends-Methodology-and-Validation-Results.pdf">"World Bank LinkedIn Digital Data for Development"</a> by World Bank Group & LinkedIn Corporation, licensed under CC BY 3.0.</caption>
+  </footer>
 </template>
 
 <script>
 const axios = require('axios');
-
 export default {
   name: 'IndustrySkillsComponent',
-  components: {
-  },
   data() {
     return {
       industryNames: ["Mining & Metals",
@@ -141,7 +142,7 @@ export default {
       industryHeadingString: '',
       growthHeadingString: '',
       topSkills: [],
-      industryGrowth: [],
+      industryGrowth: [0,0,0,0,0],
       isLoading: false,
     }
   },
@@ -157,20 +158,15 @@ export default {
     async getIndustrySkills(industry) {
       this.isLoading = true
       this.selectedIndustryName = industry;
-      if (industry.includes(" & ")) {
-      this.industryAPIString = industry.replace(' & ', '%20%26%20')
-      }
-      else if (industry.includes(" ")) {
-      this.industryAPIString = industry.replace(' ', '%20')
-      } else {
-        this.industryAPIString = industry;
-      }
-
-      if (this.industryAPIString && this.countryAPIString) {
-        this.getIndustryGrowth(this.countryAPIString, this.industryAPIString)
-      }
-
+      this.industryAPIString = industry.toString();
+      if (this.industryAPIString.includes(" & ")) {
+        this.industryAPIString = this.industryAPIString.replace(' & ', '%20%26%20')
+        if (this.industryAPIString.includes(" ")) {
+          this.industryAPIString = this.industryAPIString.replace(' ', '%20')
+        }
+      } this.industryAPIString = industry;
       try {
+        this.getIndustryGrowth(this.countryAPIString, this.industryAPIString)
         const res = await axios.get(`api/top-skills?ind=${this.industryAPIString}`)
         const data = res.data;
         this.topSkills = data;
@@ -182,12 +178,8 @@ export default {
         return e;
       }
     },
-    async getIndustryGrowth(country, industry) {
+    async getIndustryGrowth(country='Canada', industry) {
       this.isLoading = true;
-      if (!country || industry === null) {
-        this.isLoading = false;
-        return;
-      }
       this.selectedCountryName = country;
       this.countryAPIString = country.toString();
       if (this.countryAPIString.includes(",")) {
@@ -210,7 +202,7 @@ export default {
         } if (data) {
           this.industryGrowth = [{year: 2015, rate: data.growth_rate_2015}, {year: 2016, rate: data.growth_rate_2016}, {year: 2017, rate: data.growth_rate_2017}, {year: 2018, rate: data.growth_rate_2018}, {year: 2019, rate: data.growth_rate_2019}]
         }
-        this.growthHeadingString = "Growth for " + this.selectedIndustryName + " in " + this.selectedCountryName;
+        this.growthHeadingString = "Growth from Transitions to " + this.selectedIndustryName + " in " + this.selectedCountryName;
         this.isLoading = false;
         return;
       } catch (e) {
@@ -232,7 +224,9 @@ h2 {
   margin-top: 2%;
 }
 ul {
-  padding: 0;
+  padding: 0.5rem;
+  background-color: #c6d1dd;
+  border: 1px solid black;
 }
 li {
   margin: 0 10px;
@@ -242,7 +236,7 @@ li {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 50%
+  width: 80%
 }
 .chart-container {
   display: flex;
@@ -265,16 +259,31 @@ p {
 .caption-text {
   font-size: 0.7rem;
 }
+.footer-container {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .growth-rate, .top-skills {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
+.inputs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 @media screen and (min-width: 850px) {
   .chart-container {
     display: flex;
     width: 40%;
+  }
+  .list-container {
+    width: 50%;
   }
 }
 </style>
