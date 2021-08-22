@@ -265,23 +265,16 @@ p {
 .caption-text {
   font-size: 0.7rem;
 }
-@media screen and (min-width: 850px) {
-  .chart-container {
-    display: flex;
-    width: 40%;
-  }
-
-  canvas {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
   .growth-rate, .top-skills {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+  }
+@media screen and (min-width: 850px) {
+  .chart-container {
+    display: flex;
+    width: 40%;
   }
 }
 </style>
