@@ -164,8 +164,9 @@ export default {
         if (this.industryAPIString.includes(" ")) {
           this.industryAPIString = this.industryAPIString.replace(' ', '%20')
         }
-      } this.industryAPIString = industry;
+      } 
       try {
+        console.log(this.industryAPIString);
         this.getIndustryGrowth(this.countryAPIString, this.industryAPIString)
         const res = await axios.get(`api/top-skills?ind=${this.industryAPIString}`)
         const data = res.data;
